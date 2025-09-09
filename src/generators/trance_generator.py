@@ -1,4 +1,4 @@
-"""Trance Music NFO Generator."""
+"""Trance Video NFO Generator."""
 
 import re
 from typing import Optional
@@ -11,34 +11,30 @@ from ..core.exceptions import ScrapingError, NetworkError
 
 
 class TranceMusicNfoGenerator(BaseNfoGenerator):
-    """NFO Generator for Trance Music websites."""
+    """NFO Generator for Trance Video websites."""
     
     @property
     def site_name(self) -> str:
         """Return the name of the supported site."""
-        return "Trance-Music"
+        return "Trance-Video"
     
     @property
     def site_domain(self) -> str:
         """Return the domain of the supported site."""
-        return "trance"
+        return "trance-video.com"
     
     def extract_product_id(self, url: str) -> Optional[str]:
-        """Extract product ID from Trance Music URL.
+        """Extract product ID from Trance Video URL.
         
         Args:
-            url: The music/video URL
+            url: The video URL
             
         Returns:
             Product ID if found, None otherwise
         """
-        # Support multiple URL patterns for trance music sites
+        # Support trance-video.com URL pattern
         patterns = [
-            r"/track/(\d+)",
-            r"/music/(\d+)",
-            r"/video/(\d+)",
-            r"/release/(\d+)",
-            r"id=(\d+)",
+            r"/product/detail/(\d+)",
             r"/(\d+)/?$"
         ]
         
@@ -50,10 +46,10 @@ class TranceMusicNfoGenerator(BaseNfoGenerator):
         return None
     
     def scrape_movie_info(self, url: str) -> bool:
-        """Scrape music/video information from Trance Music URL.
+        """Scrape video information from Trance Video URL.
         
         Args:
-            url: The music/video URL
+            url: The video URL
             
         Returns:
             True if successful, False otherwise
@@ -62,7 +58,7 @@ class TranceMusicNfoGenerator(BaseNfoGenerator):
             ScrapingError: If scraping fails
             NetworkError: If network request fails
         """
-        print("🚀 开始尝试获取音乐/视频信息...")
+        print("🚀 开始尝试获取视频信息...")
         
         try:
             response = self.make_request(url)
@@ -71,13 +67,13 @@ class TranceMusicNfoGenerator(BaseNfoGenerator):
             
             # Extract basic information
             title = self._extract_title(soup)
-            artist = self._extract_artist(soup)
+            work_id = self._extract_work_id(soup)
             
-            # Combine artist with title for music content
-            if artist:
-                title = f"{artist} - {title}".strip()
+            # Combine work ID with title
+            if work_id:
+                title = f"[{work_id}] {title}".strip()
             
-            # Initialize movie data (adapted for music content)
+            # Initialize movie data
             self.movie_data = MovieData(
                 title=title,
                 original_title=title,
@@ -87,18 +83,17 @@ class TranceMusicNfoGenerator(BaseNfoGenerator):
                 outline=self._extract_release_date(soup),
                 genres=self._extract_genres(soup),
                 runtime=self._extract_duration(soup),
-                director=self._extract_producer(soup),
+                director=self._extract_maker(soup),
                 studio=self._extract_label(soup) or self.site_name,
-                premiered="",
+                premiered=self._extract_release_date(soup),
                 thumb=self._extract_artwork(soup),
                 fanart=self._extract_background(soup)
             )
             
-            # Add artists as actors
-            artists = self._extract_all_artists(soup)
-            for i, artist_name in enumerate(artists):
-                role = "主唱" if i == 0 else "合作艺人"
-                self.movie_data.add_actor(artist_name, role)
+            # Add performers as actors
+            performers = self._extract_performers(soup)
+            for i, performer_name in enumerate(performers):
+                self.movie_data.add_actor(performer_name, "出演者")
             
             # Add unique ID
             if self.movie_data.product_id:
@@ -108,23 +103,22 @@ class TranceMusicNfoGenerator(BaseNfoGenerator):
                     is_default=True
                 )
             
-            # Add music-specific tags
+            # Add video-specific tags
             self.movie_data.tags.extend([
                 self.site_name.lower(), 
-                "电子音乐", 
-                "trance",
-                "音乐视频"
+                "成人视频",
+                "日本"
             ])
             
             # Add default rating
-            self.movie_data.add_rating(8.0, 500, "default", 10.0, True)
+            self.movie_data.add_rating(7.5, 100, "default", 10.0, True)
             
-            # Set music-specific properties
-            self.movie_data.mpaa = "G"  # Music is generally all-ages
-            self.movie_data.certification = "G"
-            self.movie_data.country = "国际"
+            # Set video-specific properties
+            self.movie_data.mpaa = "XXX"
+            self.movie_data.certification = "R18+"
+            self.movie_data.country = "日本"
             
-            print("✅ 音乐信息获取完成")
+            print("✅ 视频信息获取完成")
             return True
             
         except NetworkError:
@@ -133,15 +127,11 @@ class TranceMusicNfoGenerator(BaseNfoGenerator):
             raise ScrapingError(f"爬取过程中出现错误: {e}")
     
     def _extract_title(self, soup: BeautifulSoup) -> str:
-        """Extract track/video title from soup."""
-        # Try multiple selectors for different trance music sites
+        """Extract video title from soup."""
+        # Try multiple selectors for trance-video.com
         selectors = [
-            "h1.track-title",
-            "h1.song-title",
-            ".title h1",
             "h1",
-            ".track-name",
-            ".song-name",
+            ".title",
             "title"
         ]
         
@@ -150,63 +140,67 @@ class TranceMusicNfoGenerator(BaseNfoGenerator):
             if title_elem:
                 title = title_elem.get_text().strip()
                 # Clean up title (remove site name, etc.)
-                title = re.sub(r'\s*-\s*.*?(trance|music|radio).*$', '', title, flags=re.IGNORECASE)
+                title = re.sub(r'\s*-\s*.*?(trance|video|market).*$', '', title, flags=re.IGNORECASE)
                 if title:
                     return title
         
-        return "未知音乐标题"
+        return "未知视频标题"
     
-    def _extract_artist(self, soup: BeautifulSoup) -> str:
-        """Extract main artist from soup."""
-        selectors = [
-            ".artist-name",
-            ".track-artist",
-            ".by-artist",
-            "[class*='artist']",
-            ".performer"
+    def _extract_work_id(self, soup: BeautifulSoup) -> str:
+        """Extract work ID from soup."""
+        # Look for work ID in the page
+        work_id_selectors = [
+            ".work-id",
+            "[class*='work']",
+            "[class*='id']"
         ]
         
-        for selector in selectors:
-            artist_elem = soup.select_one(selector)
-            if artist_elem:
-                return artist_elem.get_text().strip()
+        for selector in work_id_selectors:
+            id_elem = soup.select_one(selector)
+            if id_elem:
+                return id_elem.get_text().strip()
+        
+        # Try to extract from text content
+        text_content = soup.get_text()
+        id_match = re.search(r'([A-Z]{2}-\d{2}-\d{4}-\d{2})', text_content)
+        if id_match:
+            return id_match.group(1)
         
         return ""
     
-    def _extract_all_artists(self, soup: BeautifulSoup) -> list:
-        """Extract all artists from soup."""
-        artists = []
-        main_artist = self._extract_artist(soup)
-        if main_artist:
-            artists.append(main_artist)
+    def _extract_performers(self, soup: BeautifulSoup) -> list:
+        """Extract performers from soup."""
+        performers = []
         
-        # Look for featured artists
-        feat_selectors = [
-            ".featured-artists",
-            ".collaborators",
-            "[class*='feat']"
+        # Look for performer information
+        performer_selectors = [
+            ".performer",
+            ".actor",
+            ".cast",
+            "[class*='performer']",
+            "[class*='actor']"
         ]
         
-        for selector in feat_selectors:
-            feat_elems = soup.select(selector)
-            for elem in feat_elems:
-                artist_name = elem.get_text().strip()
-                if artist_name and artist_name not in artists:
-                    artists.append(artist_name)
+        for selector in performer_selectors:
+            performer_elems = soup.select(selector)
+            for elem in performer_elems:
+                performer_name = elem.get_text().strip()
+                if performer_name and performer_name not in performers:
+                    performers.append(performer_name)
         
-        return artists if artists else ["未知艺人"]
+        return performers if performers else ["未知出演者"]
     
     def _extract_genres(self, soup: BeautifulSoup) -> list:
-        """Extract music genres from soup."""
+        """Extract video genres from soup."""
         genres = []
         
-        # Look for genre tags
+        # Look for category tags
         genre_selectors = [
+            ".category",
             ".genre",
             ".tag",
-            ".style",
-            "[class*='genre']",
-            ".categories a"
+            "[class*='category']",
+            "[class*='genre']"
         ]
         
         for selector in genre_selectors:
@@ -216,9 +210,9 @@ class TranceMusicNfoGenerator(BaseNfoGenerator):
                 if genre and genre not in genres:
                     genres.append(genre)
         
-        # Default trance genres if none found
+        # Default genres if none found
         if not genres:
-            genres = ["Trance", "Electronic", "Dance"]
+            genres = ["成人", "日本"]
         
         return genres
     
@@ -230,21 +224,23 @@ class TranceMusicNfoGenerator(BaseNfoGenerator):
         return str(datetime.now().year)
     
     def _extract_description(self, soup: BeautifulSoup) -> str:
-        """Extract track/video description from soup."""
+        """Extract video description from soup."""
         desc_selectors = [
             ".description",
-            ".track-info",
-            ".about",
             ".summary",
-            "[class*='desc']"
+            ".content",
+            "[class*='desc']",
+            "p"
         ]
         
         for selector in desc_selectors:
             desc_elem = soup.select_one(selector)
             if desc_elem:
-                return desc_elem.get_text().strip()
+                desc_text = desc_elem.get_text().strip()
+                if len(desc_text) > 20:  # Ensure it's substantial content
+                    return desc_text
         
-        return "精彩的电子音乐作品，带您进入trance的音乐世界。"
+        return "精彩的成人视频作品。"
     
     def _extract_release_date(self, soup: BeautifulSoup) -> str:
         """Extract release date from soup."""
@@ -289,10 +285,10 @@ class TranceMusicNfoGenerator(BaseNfoGenerator):
         return f"{current_year}-01-01"
     
     def _extract_duration(self, soup: BeautifulSoup) -> str:
-        """Extract track duration from soup."""
+        """Extract video duration from soup."""
         duration_selectors = [
             ".duration",
-            ".length",
+            ".runtime",
             ".time",
             "[class*='duration']",
             "[class*='time']"
@@ -302,39 +298,43 @@ class TranceMusicNfoGenerator(BaseNfoGenerator):
             duration_elem = soup.select_one(selector)
             if duration_elem:
                 duration_text = duration_elem.get_text().strip()
-                # Convert MM:SS to total minutes
-                time_match = re.search(r"(\d+):(\d+)", duration_text)
+                # Convert HH:MM:SS or MM:SS to total minutes
+                time_match = re.search(r"(?:(\d+):)?(\d+):(\d+)", duration_text)
                 if time_match:
-                    minutes, seconds = map(int, time_match.groups())
-                    total_minutes = minutes + (seconds / 60)
+                    hours, minutes, seconds = time_match.groups()
+                    hours = int(hours) if hours else 0
+                    minutes = int(minutes)
+                    seconds = int(seconds)
+                    total_minutes = hours * 60 + minutes + (seconds / 60)
                     return str(int(total_minutes))
         
-        return "4"  # Default 4 minutes for music tracks
+        return "30"  # Default 30 minutes for videos
     
-    def _extract_producer(self, soup: BeautifulSoup) -> str:
-        """Extract producer/remixer from soup."""
-        producer_selectors = [
+    def _extract_maker(self, soup: BeautifulSoup) -> str:
+        """Extract maker/director from soup."""
+        maker_selectors = [
+            ".maker",
+            ".director",
             ".producer",
-            ".remixer",
-            ".credits .producer",
-            "[class*='producer']"
+            "[class*='maker']",
+            "[class*='director']"
         ]
         
-        for selector in producer_selectors:
-            producer_elem = soup.select_one(selector)
-            if producer_elem:
-                return producer_elem.get_text().strip()
+        for selector in maker_selectors:
+            maker_elem = soup.select_one(selector)
+            if maker_elem:
+                return maker_elem.get_text().strip()
         
-        # Fallback to main artist
-        return self._extract_artist(soup) or "未知制作人"
+        return "未知制作商"
     
     def _extract_label(self, soup: BeautifulSoup) -> str:
-        """Extract record label from soup."""
+        """Extract label/studio from soup."""
         label_selectors = [
             ".label",
-            ".record-label",
+            ".studio",
             ".publisher",
-            "[class*='label']"
+            "[class*='label']",
+            "[class*='studio']"
         ]
         
         for selector in label_selectors:
@@ -345,14 +345,15 @@ class TranceMusicNfoGenerator(BaseNfoGenerator):
         return ""
     
     def _extract_artwork(self, soup: BeautifulSoup) -> str:
-        """Extract artwork/cover image from soup."""
+        """Extract poster/cover image from soup."""
         img_selectors = [
-            ".artwork img",
+            ".poster img",
             ".cover img",
-            ".album-art img",
-            ".track-image img",
+            ".thumbnail img",
+            ".preview img",
             "img[class*='cover']",
-            "img[class*='artwork']"
+            "img[class*='poster']",
+            "img[class*='thumb']"
         ]
         
         for selector in img_selectors:

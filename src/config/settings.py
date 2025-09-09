@@ -46,31 +46,32 @@ SITE_CONFIGS: Dict[str, Dict[str, Any]] = {
         "default_tags": ["ck-download", "国产"],
         "default_genres": ["剧情", "爱情"]
     },
-    "trance-music": {
-        "name": "Trance-Music",
-        "domain": "trance",
-        "base_url": "https://trance-music.com",
+    "trance-video": {
+        "name": "Trance-Video",
+        "domain": "trance-video.com",
+        "base_url": "https://www.trance-video.com",
         "selectors": {
-            "title": ["h1.track-title", "h1.song-title", ".title h1", "h1"],
-            "artist": [".artist-name", ".track-artist", ".by-artist"],
-            "genre": [".genre", ".tag", ".style", ".categories a"],
-            "description": [".description", ".track-info", ".about"],
+            "title": ["h1", ".title", "title"],
+            "work_id": [".work-id", "[class*='work']", "[class*='id']"],
+            "genre": [".category", ".genre", ".tag", "[class*='category']"],
+            "description": [".description", ".summary", ".content", "p"],
             "date": [".release-date", ".date", ".published", "time"],
-            "duration": [".duration", ".length", ".time"],
-            "artwork": [".artwork img", ".cover img", ".album-art img"]
+            "duration": [".duration", ".runtime", ".time"],
+            "artwork": [".poster img", ".cover img", ".thumbnail img", ".preview img"]
         },
         "patterns": {
-            "product_id": [r"/track/(\d+)", r"/music/(\d+)", r"/video/(\d+)", r"id=(\d+)"],
+            "product_id": [r"/product/detail/(\d+)", r"/(\d+)/?$"],
+            "work_id": r"([A-Z]{2}-\d{2}-\d{4}-\d{2})",
             "date": [r"(\d{4})-(\d{2})-(\d{2})", r"(\d{4})\.(\d{2})\.(\d{2})", r"(\d{2})/(\d{2})/(\d{4})"],
-            "duration": r"(\d+):(\d+)"
+            "duration": r"(?:(\d+):)?(\d+):(\d+)"
         },
-        "default_studio": "Trance-Music",
-        "default_tags": ["trance-music", "电子音乐", "trance", "音乐视频"],
-        "default_genres": ["Trance", "Electronic", "Dance"],
-        "default_mpaa": "G",
-        "default_certification": "G",
-        "default_country": "国际",
-        "default_runtime": "4"
+        "default_studio": "Trance-Video",
+        "default_tags": ["trance-video", "成人视频", "日本"],
+        "default_genres": ["成人", "日本"],
+        "default_mpaa": "XXX",
+        "default_certification": "R18+",
+        "default_country": "日本",
+        "default_runtime": "30"
     }
 }
 

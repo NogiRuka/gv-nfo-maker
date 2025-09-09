@@ -37,7 +37,7 @@ def main():
     parser.add_argument(
         "-s", "--site",
         help="指定网站类型 (auto-detect if not specified)",
-        choices=["ck-download", "trance-music", "auto"],
+        choices=["ck-download", "trance-video", "auto"],
         default="auto"
     )
     
@@ -101,7 +101,7 @@ def main():
             generator = factory.create_generator_from_url(args.url)
             if not generator:
                 print("❌ 无法识别URL对应的网站，请使用 --site 参数指定")
-                print("支持的网站: ck-download, trance-music")
+                print("支持的网站: ck-download, trance-video")
                 return 1
         else:
             generator = factory.create_generator(args.site)

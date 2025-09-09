@@ -4,7 +4,7 @@
 
 ## 🌟 特性
 
-- **多网站支持**: 支持CK-Download、Trance音乐网站等多个平台
+- **多网站支持**: 支持CK-Download、Trance视频网站等多个平台
 - **模块化架构**: 易于扩展和维护的模块化设计
 - **智能识别**: 自动识别URL对应的网站类型
 - **配置管理**: 灵活的配置系统，支持自定义设置
@@ -40,7 +40,7 @@ pip install -r requirements.txt
 python -m src.main https://ck-download.com/product/detail/12345
 
 # 指定网站类型
-python -m src.main --site ck-download https://ck-download.com/product/detail/12345
+python -m src.main --site trance-video https://www.trance-video.com/product/detail/39661
 
 # 指定输出文件名
 python -m src.main -o "我的电影.nfo" https://example.com/movie
@@ -150,11 +150,11 @@ gv-nfo-maker/
 - **支持内容**: 电影、电视剧
 - **URL格式**: `https://ck-download.com/product/detail/{id}`
 
-### Trance Music
+### Trance Video
 
-- **网站**: 各种trance音乐网站
-- **支持内容**: 音乐、音乐视频
-- **URL格式**: 支持多种格式，自动识别
+- **网站**: trance-video.com
+- **支持内容**: 成人视频
+- **URL格式**: `https://www.trance-video.com/product/detail/{id}`
 
 ## 🔌 扩展开发
 
@@ -244,7 +244,7 @@ tail -f nfo_generator.log
 
 - ✨ 初始版本发布
 - 🏗️ 模块化架构重构
-- 🔌 支持CK-Download和Trance音乐网站
+- 🔌 支持CK-Download和Trance视频网站
 - ⚙️ 配置管理系统
 - 🔍 智能URL识别
 - 📊 数据验证和错误处理

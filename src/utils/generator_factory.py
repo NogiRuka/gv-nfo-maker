@@ -22,7 +22,7 @@ class GeneratorFactory:
         self.config_manager = config_manager
         self._generators: Dict[str, Type[BaseNfoGenerator]] = {
             "ck-download": CkDownloadNfoGenerator,
-            "trance-music": TranceMusicNfoGenerator
+            "trance-video": TranceMusicNfoGenerator
         }
     
     def register_generator(self, site: str, generator_class: Type[BaseNfoGenerator]) -> None:
@@ -90,7 +90,7 @@ class GeneratorFactory:
         # Fallback: try to match by domain keywords
         domain_mappings = {
             "ck-download": ["ck-download", "ckdownload"],
-            "trance-music": ["trance", "music", "electronic", "dance"]
+            "trance-video": ["trance-video", "trance", "video"]
         }
         
         for site, keywords in domain_mappings.items():
