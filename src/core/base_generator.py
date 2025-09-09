@@ -29,6 +29,7 @@ class BaseNfoGenerator(ABC):
         })
         self.movie_data = MovieData()
         self.timeout = self.config.get("timeout", 10)
+        self.run_mode = self.config.get("run_mode", "interactive")
     
     @property
     @abstractmethod
@@ -325,6 +326,7 @@ class BaseNfoGenerator(ABC):
             Generated NFO filename if successful, None otherwise
         """
         print(f"🎬 {self.site_name} NFO 文件生成器")
+        print(f"📋 运行模式: {self._get_mode_description()}")
         print("=" * 40)
         
         if not self.validate_url(url):
@@ -334,16 +336,31 @@ class BaseNfoGenerator(ABC):
         try:
             success = self.scrape_movie_info(url)
             if not success:
-                print("⚠️  自动爬取失败，请手动输入信息")
-                # Initialize with basic data
-                self.movie_data = MovieData(
-                    product_id=self.extract_product_id(url) or "unknown",
-                    year=str(2023),
-                    runtime="120",
-                    studio=self.site_name
-                )
+                if self.run_mode == "auto":
+                    print("❌ 自动模式下爬取失败，无法继续")
+                    return None
+                else:
+                    print("⚠️  自动爬取失败，请手动输入信息")
+                    # Initialize with basic data
+                    self.movie_data = MovieData(
+                        product_id=self.extract_product_id(url) or "unknown",
+                        year=str(2023),
+                        runtime="120",
+                        studio=self.site_name
+                    )
             
-            self.manual_input_correction()
+            # Handle different run modes
+            if self.run_mode == "auto":
+                print("🤖 自动模式：跳过人工修正")
+            elif self.run_mode == "manual":
+                print("✋ 手动模式：需要人工修正所有信息")
+                self.manual_input_correction()
+            else:  # interactive mode
+                if self._should_manual_correct():
+                    self.manual_input_correction()
+                else:
+                    print("⚡ 自动生成模式：跳过人工修正")
+            
             nfo_file = self.create_nfo_file()
             
             if nfo_file:
@@ -355,3 +372,30 @@ class BaseNfoGenerator(ABC):
         except Exception as e:
             print(f"❌ 生成过程中出现错误: {e}")
             return None
+    
+    def _get_mode_description(self) -> str:
+        """Get description of current run mode."""
+        mode_descriptions = {
+            "auto": "自动模式 (无人工干预)",
+            "manual": "手动模式 (需要人工修正)",
+            "interactive": "交互模式 (可选择是否修正)"
+        }
+        return mode_descriptions.get(self.run_mode, "未知模式")
+    
+    def _should_manual_correct(self) -> bool:
+        """Ask user if they want to manually correct data in interactive mode."""
+        if not self.config.get("manual_input", True):
+            return False
+        
+        while True:
+            choice = input("\n是否需要手动修正信息? (y/n/auto): ").lower().strip()
+            if choice in ['y', 'yes', '是']:
+                return True
+            elif choice in ['n', 'no', '否']:
+                return False
+            elif choice in ['auto', '自动']:
+                # Switch to auto mode for this session
+                self.run_mode = "auto"
+                return False
+            else:
+                print("请输入 y(是)/n(否)/auto(自动)")

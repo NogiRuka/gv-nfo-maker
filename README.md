@@ -8,6 +8,7 @@
 - **模块化架构**: 易于扩展和维护的模块化设计
 - **智能识别**: 自动识别URL对应的网站类型
 - **配置管理**: 灵活的配置系统，支持自定义设置
+- **多种运行模式**: 支持自动、手动、交互三种运行模式
 - **交互式界面**: 支持命令行和交互式两种使用模式
 - **数据验证**: 完整的数据验证和错误处理机制
 - **日志记录**: 详细的日志记录功能
@@ -47,6 +48,10 @@ python -m src.main -o "我的电影.nfo" https://example.com/movie
 
 # 跳过手动输入步骤
 python -m src.main --no-manual https://example.com/movie
+
+# 设置运行模式
+python -m src.main --mode auto https://example.com/movie
+python -m src.main --mode manual https://example.com/movie
 
 # 详细输出
 python -m src.main -v https://example.com/movie
@@ -101,6 +106,39 @@ gv-nfo-maker/
 └── .gitignore                  # Git忽略文件
 ```
 
+## 🎮 运行模式
+
+NFO Generator 支持三种运行模式，满足不同的使用需求：
+
+### 1. 自动模式 (auto)
+- **特点**: 完全自动化，无人工干预
+- **适用**: 批量处理、脚本自动化
+- **行为**: 自动爬取信息并直接生成NFO文件，如果爬取失败则终止
+
+```bash
+python -m src.main --mode auto https://example.com/movie
+```
+
+### 2. 手动模式 (manual)
+- **特点**: 强制人工修正所有信息
+- **适用**: 需要精确控制输出内容
+- **行为**: 爬取信息后必须进行人工修正确认
+
+```bash
+python -m src.main --mode manual https://example.com/movie
+```
+
+### 3. 交互模式 (interactive) - 默认
+- **特点**: 灵活选择是否进行人工修正
+- **适用**: 日常使用，平衡自动化和控制性
+- **行为**: 爬取信息后询问是否需要人工修正
+
+```bash
+python -m src.main --mode interactive https://example.com/movie
+# 或直接使用（默认模式）
+python -m src.main https://example.com/movie
+```
+
 ## 🔧 配置
 
 ### 配置文件格式
@@ -139,6 +177,7 @@ gv-nfo-maker/
 - `user_agent`: HTTP请求的User-Agent
 - `timeout`: 请求超时时间（秒）
 - `retry_attempts`: 重试次数
+- `run_mode`: 运行模式 (auto/manual/interactive)
 - `manual_input`: 是否启用手动输入修正
 - `auto_correction`: 是否启用自动修正
 

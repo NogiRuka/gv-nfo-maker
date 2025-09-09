@@ -59,6 +59,13 @@ def main():
     )
     
     parser.add_argument(
+        "-m", "--mode",
+        help="运行模式",
+        choices=["auto", "manual", "interactive"],
+        default="interactive"
+    )
+    
+    parser.add_argument(
         "--create-config",
         action="store_true",
         help="创建默认配置文件"
@@ -106,9 +113,14 @@ def main():
         else:
             generator = factory.create_generator(args.site)
         
-        # Override manual input setting if specified
+        # Override settings based on arguments
         if args.no_manual:
             generator.config["manual_input"] = False
+            generator.run_mode = "auto"
+        
+        if args.mode:
+            generator.run_mode = args.mode
+            generator.config["run_mode"] = args.mode
         
         # Generate NFO file
         print(f"🎬 使用 {generator.site_name} 生成器")
@@ -168,10 +180,11 @@ def interactive_mode():
             print("\n请选择操作:")
             print("  1. 输入URL自动识别")
             print("  2. 手动选择网站")
-            print("  3. 查看配置")
-            print("  4. 退出")
+            print("  3. 设置运行模式")
+            print("  4. 查看配置")
+            print("  5. 退出")
             
-            choice = input("\n请输入选择 (1-4): ").strip()
+            choice = input("\n请输入选择 (1-5): ").strip()
             
             if choice == "1":
                 url = input("请输入URL: ").strip()
@@ -202,12 +215,31 @@ def interactive_mode():
                     print("❌ 请输入有效的数字")
             
             elif choice == "3":
+                print("\n当前运行模式设置:")
+                current_mode = config_manager.get('run_mode', 'interactive')
+                print(f"  当前模式: {current_mode}")
+                print("\n可选模式:")
+                print("  1. auto - 自动模式 (无人工干预)")
+                print("  2. manual - 手动模式 (需要人工修正)")
+                print("  3. interactive - 交互模式 (可选择是否修正)")
+                
+                mode_choice = input("\n请选择运行模式 (1-3): ").strip()
+                mode_map = {'1': 'auto', '2': 'manual', '3': 'interactive'}
+                if mode_choice in mode_map:
+                    new_mode = mode_map[mode_choice]
+                    config_manager.set('run_mode', new_mode)
+                    print(f"✅ 运行模式已设置为: {new_mode}")
+                else:
+                    print("❌ 无效的选择")
+            
+            elif choice == "4":
                 print("\n当前配置:")
                 print(f"  配置文件: {config_manager.config_file}")
+                print(f"  运行模式: {config_manager.get('run_mode', 'interactive')}")
                 print(f"  超时时间: {config_manager.get('timeout')}秒")
                 print(f"  支持网站: {', '.join(sites)}")
             
-            elif choice == "4":
+            elif choice == "5":
                 print("👋 再见！")
                 break
             

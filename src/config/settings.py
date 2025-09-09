@@ -20,6 +20,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "default_country": "中国",
     "auto_correction": True,
     "manual_input": True,
+    "run_mode": "interactive",  # interactive, auto, manual
     "backup_files": True,
     "log_level": "INFO",
     "log_file": "nfo_generator.log"
