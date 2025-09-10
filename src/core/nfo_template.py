@@ -7,6 +7,7 @@ from datetime import datetime
 
 from .movie_data import MovieData, Actor, Rating
 from .exceptions import ValidationError
+from .rating_validator import CustomRatingValidator
 
 
 class NFOTemplate:
@@ -63,7 +64,7 @@ class NFOTemplate:
     # Required fields for validation
     REQUIRED_FIELDS = ['title', 'year']
     
-    # Optional fields with defaults
+    # Optional fields with defaults based on user requirements
     DEFAULT_VALUES = {
         'mpaa': 'Not Rated',
         'certification': 'Not Rated',
@@ -71,9 +72,16 @@ class NFOTemplate:
         'top250': 0,
         'runtime': '0',
         'country': '未知',
-        'tagline': '',
+        'outline': '',  # 默认空
+        'tagline': '',  # 默认空
+        'customrating': 'XXX',  # 默认XXX
+        'lockdata': False,  # 固定false
+        'lockedfields': 'Name|OriginalTitle|SortName|CommunityRating|CriticRating|Tagline|Overview|OfficialRating|Genres|Cast|Studios|Tags',  # 固定值
+        'rating': '',  # 默认空白
+        'criticrating': '',  # 默认空
         'trailer': '',
-        'set_name': ''
+        'set_name': '',
+        'studio': ''  # 默认空
     }
     
     def __init__(self, template_name: str = "standard"):
@@ -212,13 +220,47 @@ class NFOTemplate:
             self._add_simple_field(parent, field_name, movie_data)
     
     def _add_simple_field(self, parent: ET.Element, field_name: str, movie_data: MovieData):
-        """Add simple text field."""
+        """Add simple text field with user-defined rules."""
         attr_name = self.STANDARD_FIELDS[field_name]
         value = getattr(movie_data, attr_name, None)
         
+        # Apply user-defined field rules
+        if field_name == 'originaltitle':
+            # originaltitle值与title相同
+            value = movie_data.title
+        elif field_name == 'sorttitle':
+            # sorttitle为imdbid空格title
+            if movie_data.imdb_id and movie_data.title:
+                value = f"{movie_data.imdb_id} {movie_data.title}"
+            else:
+                value = movie_data.title or ''
+        elif field_name == 'year':
+            # year从releasedate解析，如果没有则使用原值
+            if movie_data.release_date:
+                try:
+                    value = movie_data.release_date.split('-')[0]
+                except:
+                    value = movie_data.year or ''
+            else:
+                value = movie_data.year or ''
+        elif field_name == 'premiered':
+            # premiered值与releasedate相同
+            value = movie_data.release_date or ''
+        elif field_name == 'tvdbid':
+            # tvdbid值与imdbid相同
+            value = movie_data.imdb_id or ''
+        elif field_name == 'tmdbid':
+            # tmdbid值与imdbid相同
+            value = movie_data.imdb_id or ''
+        elif field_name == 'customrating':
+            # customrating需要验证有效值
+            value = CustomRatingValidator.sanitize_rating(value)
+        
+        # 如果值仍为空，使用默认值
         if value is None or value == "":
             value = self.DEFAULT_VALUES.get(field_name, "")
         
+        # 只有在有值或是必填字段时才添加
         if value or field_name in self.REQUIRED_FIELDS:
             ET.SubElement(parent, field_name).text = str(value)
     
@@ -245,41 +287,62 @@ class NFOTemplate:
             ET.SubElement(rating, "votes").text = "1000"
     
     def _add_genres(self, parent: ET.Element, movie_data: MovieData):
-        """Add genre elements."""
-        for genre in movie_data.genres:
+        """Add genre elements with default GV."""
+        # genre默认给一个GV
+        genres = movie_data.genres if movie_data.genres else ['GV']
+        
+        # 确保GV在列表中
+        if 'GV' not in genres:
+            genres.insert(0, 'GV')
+        
+        for genre in genres:
             if genre:
                 ET.SubElement(parent, "genre").text = genre
     
     def _add_tags(self, parent: ET.Element, movie_data: MovieData):
-        """Add tag elements."""
-        for tag in movie_data.tags:
+        """Add tag elements with imdbid as first tag."""
+        tags = []
+        
+        # tag固定第一个为imdbid（有值的情况）
+        if movie_data.imdb_id:
+            tags.append(movie_data.imdb_id)
+        
+        # 添加其他标签
+        if movie_data.tags:
+            for tag in movie_data.tags:
+                if tag and tag != movie_data.imdb_id:  # 避免重复
+                    tags.append(tag)
+        
+        # 生成标签元素
+        for tag in tags:
             if tag:
                 ET.SubElement(parent, "tag").text = tag
     
     def _add_actors(self, parent: ET.Element, movie_data: MovieData):
-        """Add actor elements in RML4001 format."""
+        """Add actor elements with fixed type."""
         for actor in movie_data.actors:
             actor_elem = ET.SubElement(parent, "actor")
             ET.SubElement(actor_elem, "name").text = actor.name
-            # RML4001 format uses 'type' instead of 'role'
-            actor_type = "Actor" if not actor.role else actor.role
-            ET.SubElement(actor_elem, "type").text = actor_type
+            # actor的type固定Actor
+            ET.SubElement(actor_elem, "type").text = "Actor"
     
     def _add_unique_ids(self, parent: ET.Element, movie_data: MovieData):
-        """Add unique ID elements."""
-        for id_type, id_value in movie_data.unique_ids.items():
-            if id_value:
-                is_default = len(movie_data.unique_ids) == 1 or id_type.endswith('-default')
+        """Add unique ID elements based on imdbid."""
+        # 根据imdbid来，如果imdbid无值则nfo里不生成
+        if movie_data.imdb_id:
+            # imdb, tmdb, tvdb字段相同，根据imdbid来
+            id_types = ['imdb', 'tmdb', 'tvdb']
+            for id_type in id_types:
                 ET.SubElement(
                     parent, "uniqueid",
-                    type=id_type.replace('-default', ''),
-                    default=str(is_default).lower()
-                ).text = id_value
+                    type=id_type
+                ).text = movie_data.imdb_id
     
     def _add_main_id(self, parent: ET.Element, movie_data: MovieData, site_name: str):
-        """Add main ID element."""
-        if movie_data.product_id and site_name:
-            ET.SubElement(parent, "id").text = f"{site_name.lower()}-{movie_data.product_id}"
+        """Add main ID element based on imdbid."""
+        # id根据imdbid来，如果imdbid无值则nfo里不生成
+        if movie_data.imdb_id:
+            ET.SubElement(parent, "id").text = movie_data.imdb_id
     
     def _add_thumb(self, parent: ET.Element, movie_data: MovieData):
         """Add thumb element."""
@@ -317,6 +380,7 @@ class NFOTemplate:
         ET.SubElement(video, "width").text = "1280"
         ET.SubElement(video, "height").text = "720"
         ET.SubElement(video, "aspect").text = "16:9"
+        # runtime fileinfo里的 nfo里不生成 - 按用户要求移除
         
         # Audio stream placeholder
         audio = ET.SubElement(streamdetails, "audio")
@@ -334,21 +398,24 @@ class NFOTemplate:
 
 
 class AdultNFOTemplate(NFOTemplate):
-    """Specialized template for adult content based on RML4001 format."""
+    """Specialized template for adult content based on user requirements."""
     
     def __init__(self):
         super().__init__("adult")
         
-        # Override defaults for adult content
+        # Override defaults for adult content based on user requirements
         self.DEFAULT_VALUES.update({
             'mpaa': 'XXX',
-            'customrating': 'XXX',
+            'customrating': 'XXX',  # 默认XXX
             'certification': 'R18+',
             'country': '日本',
-            'rating': 10.0,
-            'criticrating': 10.0,
-            'lockdata': False,
-            'lockedfields': 'Name|OriginalTitle|SortName|CommunityRating|CriticRating|Tagline|Overview|OfficialRating|Genres|Cast|Studios|Tags'
+            'rating': '',  # 默认空白
+            'criticrating': '',  # 默认空
+            'lockdata': False,  # 固定false
+            'lockedfields': 'Name|OriginalTitle|SortName|CommunityRating|CriticRating|Tagline|Overview|OfficialRating|Genres|Cast|Studios|Tags',  # 固定值
+            'outline': '',  # 默认空
+            'tagline': '',  # 默认空
+            'studio': ''  # 默认空
         })
         
         # Add adult-specific custom fields
