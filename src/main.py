@@ -1,6 +1,7 @@
 """GV-NFO-Maker 主程序入口。
 
-GV-NFO-Maker是一个支持多网站的NFO文件生成器，专门用于生成符合Kodi/Plex标准的NFO文件。
+GV-NFO-Maker是一个支持多网站的NFO文件生成器，专门用于生成符合Emby标准的NFO文件。
+主要面向Emby媒体服务器，同时兼容Kodi和Plex。
 """
 
 import sys

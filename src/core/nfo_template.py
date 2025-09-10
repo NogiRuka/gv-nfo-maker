@@ -1,6 +1,7 @@
 """NFO模板管理器，用于标准化NFO文件生成。
 
-基于RML4001.nfo格式标准，支持多种NFO模板类型。
+主要面向Emby媒体服务器，基于RML4001.nfo格式标准，同时兼容Kodi/Plex。
+支持多种NFO模板类型。
 """
 
 from typing import Dict, Any, Optional, List
