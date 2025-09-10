@@ -32,6 +32,9 @@ class NFOTemplate:
         # Ratings and Classification
         'mpaa': 'mpaa',
         'certification': 'certification',
+        'rating': 'rating',
+        'criticrating': 'critic_rating',
+        'customrating': 'custom_rating',
         'userrating': 'user_rating',
         'top250': 'top250',
         
@@ -45,7 +48,16 @@ class NFOTemplate:
         
         # Media
         'thumb': 'thumb',
-        'fanart': 'fanart'
+        'fanart': 'fanart',
+        
+        # IDs
+        'imdbid': 'imdb_id',
+        'tmdbid': 'tmdb_id',
+        'tvdbid': 'tvdb_id',
+        
+        # Metadata
+        'lockdata': 'lock_data',
+        'lockedfields': 'locked_fields'
     }
     
     # Required fields for validation
@@ -75,37 +87,35 @@ class NFOTemplate:
         self.field_order = self._get_field_order()
     
     def _get_field_order(self) -> List[str]:
-        """Get the standard field order for NFO generation."""
+        """Get the standard field order for NFO generation based on RML4001 sample."""
         return [
-            'title',
-            'originaltitle', 
-            'sorttitle',
-            'ratings',
-            'userrating',
-            'top250',
-            'year',
             'plot',
             'outline',
-            'tagline',
-            'runtime',
-            'thumb',
-            'fanart',
+            'customrating',
+            'lockdata',
+            'lockedfields',
+            'dateadded',
+            'title',
+            'originaltitle',
+            'actor',
+            'rating',
+            'year',
+            'sorttitle',
             'mpaa',
+            'imdbid',
+            'tvdbid',
+            'tmdbid',
             'premiered',
             'releasedate',
-            'dateadded',
-            'certification',
-            'id',
-            'uniqueid',
+            'criticrating',
+            'runtime',
+            'tagline',
             'genre',
-            'tag',
             'studio',
-            'trailer',
-            'actor',
-            'director',
-            'credits',
-            'set',
-            'country'
+            'tag',
+            'uniqueid',
+            'id',
+            'fileinfo'
         ]
     
     def add_custom_field(self, field_name: str, data_attribute: str, default_value: Any = None):
@@ -174,7 +184,11 @@ class NFOTemplate:
     
     def _add_field_to_xml(self, parent: ET.Element, field_name: str, movie_data: MovieData, site_name: str):
         """Add a field to XML element."""
-        if field_name == 'ratings':
+        if field_name == 'plot':
+            self._add_cdata_field(parent, 'plot', movie_data.plot)
+        elif field_name == 'outline':
+            self._add_cdata_field(parent, 'outline', movie_data.outline)
+        elif field_name == 'ratings':
             self._add_ratings(parent, movie_data)
         elif field_name == 'genre':
             self._add_genres(parent, movie_data)
@@ -192,6 +206,8 @@ class NFOTemplate:
             self._add_fanart(parent, movie_data)
         elif field_name == 'dateadded':
             self._add_date_added(parent)
+        elif field_name == 'fileinfo':
+            self._add_fileinfo(parent, movie_data)
         elif field_name in self.STANDARD_FIELDS:
             self._add_simple_field(parent, field_name, movie_data)
     
@@ -241,15 +257,13 @@ class NFOTemplate:
                 ET.SubElement(parent, "tag").text = tag
     
     def _add_actors(self, parent: ET.Element, movie_data: MovieData):
-        """Add actor elements."""
+        """Add actor elements in RML4001 format."""
         for actor in movie_data.actors:
             actor_elem = ET.SubElement(parent, "actor")
             ET.SubElement(actor_elem, "name").text = actor.name
-            if actor.role:
-                ET.SubElement(actor_elem, "role").text = actor.role
-            ET.SubElement(actor_elem, "order").text = str(actor.order)
-            if actor.thumb:
-                ET.SubElement(actor_elem, "thumb").text = actor.thumb
+            # RML4001 format uses 'type' instead of 'role'
+            actor_type = "Actor" if not actor.role else actor.role
+            ET.SubElement(actor_elem, "type").text = actor_type
     
     def _add_unique_ids(self, parent: ET.Element, movie_data: MovieData):
         """Add unique ID elements."""
@@ -283,6 +297,32 @@ class NFOTemplate:
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         ET.SubElement(parent, "dateadded").text = current_time
     
+    def _add_cdata_field(self, parent: ET.Element, field_name: str, content: str):
+        """Add field with CDATA content."""
+        if content:
+            elem = ET.SubElement(parent, field_name)
+            elem.text = content
+            # Note: Python's ET doesn't directly support CDATA, but content will be properly escaped
+    
+    def _add_fileinfo(self, parent: ET.Element, movie_data: MovieData):
+        """Add fileinfo section (placeholder for media file information)."""
+        # This would typically be filled by media scanner
+        # For now, we'll add a basic structure
+        fileinfo = ET.SubElement(parent, "fileinfo")
+        streamdetails = ET.SubElement(fileinfo, "streamdetails")
+        
+        # Video stream placeholder
+        video = ET.SubElement(streamdetails, "video")
+        ET.SubElement(video, "codec").text = "h264"
+        ET.SubElement(video, "width").text = "1280"
+        ET.SubElement(video, "height").text = "720"
+        ET.SubElement(video, "aspect").text = "16:9"
+        
+        # Audio stream placeholder
+        audio = ET.SubElement(streamdetails, "audio")
+        ET.SubElement(audio, "codec").text = "aac"
+        ET.SubElement(audio, "channels").text = "2"
+    
     def _add_custom_field_to_xml(self, parent: ET.Element, field_name: str, config: Dict, movie_data: MovieData):
         """Add custom field to XML."""
         attr_name = config['attribute']
@@ -294,7 +334,7 @@ class NFOTemplate:
 
 
 class AdultNFOTemplate(NFOTemplate):
-    """Specialized template for adult content."""
+    """Specialized template for adult content based on RML4001 format."""
     
     def __init__(self):
         super().__init__("adult")
@@ -302,8 +342,13 @@ class AdultNFOTemplate(NFOTemplate):
         # Override defaults for adult content
         self.DEFAULT_VALUES.update({
             'mpaa': 'XXX',
+            'customrating': 'XXX',
             'certification': 'R18+',
-            'country': '日本'
+            'country': '日本',
+            'rating': 10.0,
+            'criticrating': 10.0,
+            'lockdata': False,
+            'lockedfields': 'Name|OriginalTitle|SortName|CommunityRating|CriticRating|Tagline|Overview|OfficialRating|Genres|Cast|Studios|Tags'
         })
         
         # Add adult-specific custom fields

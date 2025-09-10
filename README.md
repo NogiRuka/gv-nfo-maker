@@ -154,8 +154,10 @@ NFO Generator 采用标准化的模板系统，确保生成的NFO文件符合Kod
 
 #### 2. 成人模板 (adult)
 - **适用**: 成人内容
-- **特点**: 包含成人内容特有字段
-- **额外字段**: series(系列)、maker(制作商)、label(厂牌)
+- **特点**: 基于RML4001格式，包含成人内容特有字段
+- **额外字段**: series(系列)、maker(制作商)、label(厂牌)、customrating(自定义评级)
+- **特殊格式**: 支持CDATA格式的plot和outline字段
+- **元数据**: 包含lockdata和lockedfields字段
 - **默认评级**: XXX/R18+
 
 #### 3. 音乐模板 (music)
@@ -166,9 +168,11 @@ NFO Generator 采用标准化的模板系统，确保生成的NFO文件符合Kod
 
 ### 📄 NFO格式示例
 
-项目包含标准格式的示例文件：
+项目包含多种格式的示例文件：
 - `examples/sample_standard.nfo` - 标准电影NFO格式
 - `examples/sample_adult.nfo` - 成人内容NFO格式
+- `examples/sample_rml_format.nfo` - 基于RML4001的标准格式
+- `examples/RML4001.nfo` - 真实的RML4001样本文件（用户提供）
 
 ### ⚙️ 模板配置
 

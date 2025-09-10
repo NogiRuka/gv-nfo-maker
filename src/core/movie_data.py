@@ -62,6 +62,14 @@ class MovieData:
     artist: str = ""
     album: str = ""
     track_number: str = ""
+    rating: float = 0.0
+    critic_rating: float = 0.0
+    custom_rating: str = ""
+    imdb_id: str = ""
+    tmdb_id: str = ""
+    tvdb_id: str = ""
+    lock_data: bool = False
+    locked_fields: str = ""
     
     def __post_init__(self):
         """Post-initialization processing."""
