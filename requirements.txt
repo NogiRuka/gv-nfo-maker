@@ -1,4 +1,4 @@
-# NFO Generator Dependencies
+# GV-NFO-Maker Dependencies
 
 # Core dependencies
 requests>=2.28.0

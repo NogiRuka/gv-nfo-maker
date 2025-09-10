@@ -1,4 +1,4 @@
-"""Logging utilities for NFO Generator."""
+"""GV-NFO-Maker 日志工具。"""
 
 import logging
 import logging.config
@@ -19,7 +19,7 @@ def setup_logging(verbose: bool = False, log_file: Optional[str] = None) -> None
     # Adjust log levels based on verbose flag
     if verbose:
         config['handlers']['console']['level'] = 'DEBUG'
-        config['loggers']['nfo_generator']['level'] = 'DEBUG'
+        config['loggers']['gv_nfo_maker']['level'] = 'DEBUG'
     
     # Use custom log file if provided
     if log_file:
@@ -29,8 +29,8 @@ def setup_logging(verbose: bool = False, log_file: Optional[str] = None) -> None
     logging.config.dictConfig(config)
     
     # Get logger and log startup message
-    logger = logging.getLogger('nfo_generator')
-    logger.info("NFO Generator logging initialized")
+    logger = logging.getLogger('gv_nfo_maker')
+    logger.info("GV-NFO-Maker logging initialized")
     
     if verbose:
         logger.debug("Verbose logging enabled")
@@ -45,7 +45,7 @@ def get_logger(name: str) -> logging.Logger:
     Returns:
         Logger instance
     """
-    return logging.getLogger(f'nfo_generator.{name}')
+    return logging.getLogger(f'gv_nfo_maker.{name}')
 
 
 class LoggerMixin:

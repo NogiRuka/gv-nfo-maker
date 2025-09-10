@@ -1,4 +1,4 @@
-"""Configuration settings for NFO Generator."""
+"""GV-NFO-Maker 配置设置。"""
 
 from typing import Dict, Any
 
@@ -24,7 +24,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "nfo_template": "standard",  # standard, adult, music
     "backup_files": True,
     "log_level": "INFO",
-    "log_file": "nfo_generator.log"
+    "log_file": "gv-nfo-maker.log"
 }
 
 # Site-specific configurations
@@ -100,12 +100,12 @@ LOGGING_CONFIG = {
         "file": {
             "level": "DEBUG",
             "class": "logging.FileHandler",
-            "filename": "nfo_generator.log",
+            "filename": "gv-nfo-maker.log",
             "formatter": "detailed"
         }
     },
     "loggers": {
-        "nfo_generator": {
+        "gv_nfo_maker": {
             "handlers": ["console", "file"],
             "level": "DEBUG",
             "propagate": False

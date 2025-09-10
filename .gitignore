@@ -163,7 +163,7 @@ cython_debug/
 # Project specific
 *.nfo
 config.json
-nfo_generator.log
+gv-nfo-maker.log
 temp/
 output/
 

@@ -1,4 +1,4 @@
-"""Utility modules for NFO Generator."""
+"""GV-NFO-Maker 工具模块。"""
 
 from .generator_factory import GeneratorFactory
 from .logger import setup_logging

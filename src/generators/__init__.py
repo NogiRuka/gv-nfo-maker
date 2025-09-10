@@ -1,4 +1,4 @@
-"""NFO Generators module."""
+"""GV-NFO-Maker 生成器模块。"""
 
 from .ck_download_generator import CkDownloadNfoGenerator
 from .trance_generator import TranceMusicNfoGenerator  # Actually handles trance-video.com

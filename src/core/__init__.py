@@ -1,4 +1,4 @@
-"""Core module for NFO Generator."""
+"""GV-NFO-Maker 核心模块。"""
 
 from .base_generator import BaseNfoGenerator
 from .movie_data import MovieData

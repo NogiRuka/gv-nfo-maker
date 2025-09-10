@@ -1,4 +1,4 @@
-# NFO Generator API 文档
+# GV-NFO-Maker API 文档
 
 ## 核心模块 (Core)
 

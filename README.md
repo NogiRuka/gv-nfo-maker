@@ -102,7 +102,7 @@ gv-nfo-maker/
 │       ├── generator_factory.py # 生成器工厂
 │       ├── logger.py           # 日志工具
 │       └── validators.py       # 验证器
-├── nfo_generator.py            # 原始文件（已重构）
+├── examples/                   # NFO示例文件
 ├── requirements.txt            # 依赖列表
 ├── config.json                 # 配置文件
 ├── README.md                   # 项目文档
@@ -111,7 +111,7 @@ gv-nfo-maker/
 
 ## 🎮 运行模式
 
-NFO Generator 支持三种运行模式，满足不同的使用需求：
+GV-NFO-Maker 支持三种运行模式，满足不同的使用需求：
 
 ### 1. 自动模式 (auto)
 - **特点**: 完全自动化，无人工干预
@@ -331,7 +331,7 @@ class CustomMovieData(MovieData):
 python -m src.main -v https://example.com/movie
 
 # 查看日志文件
-tail -f nfo_generator.log
+tail -f gv-nfo-maker.log
 ```
 
 ## 📝 更新日志
@@ -370,7 +370,7 @@ tail -f nfo_generator.log
 
 ## 👥 作者
 
-- **NFO Generator Team** - 初始开发
+- **GV-NFO-Maker Team** - 初始开发
 
 ## 🙏 致谢
 
