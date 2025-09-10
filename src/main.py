@@ -1,4 +1,7 @@
-"""Main entry point for NFO Generator."""
+"""GV-NFO-Maker 主程序入口。
+
+GV-NFO-Maker是一个支持多网站的NFO文件生成器，专门用于生成符合Kodi/Plex标准的NFO文件。
+"""
 
 import sys
 import argparse
@@ -13,30 +16,31 @@ from .utils.logger import setup_logging
 
 
 def main():
-    """Main function."""
+    """主函数 - 命令行模式入口。"""
     parser = argparse.ArgumentParser(
-        description="NFO Generator - 支持多网站的NFO文件生成器",
+        description="GV-NFO-Maker - 支持多网站的NFO文件生成器",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 支持的网站:
-  - CK-Download: ck-download.com
-  - Trance Music: 各种trance音乐网站
+  - CK-Download: ck-download.com (标准电影内容)
+  - Trance-Video: trance-video.com (成人视频内容)
 
-示例:
+使用示例:
   python -m src.main https://ck-download.com/product/detail/12345
-  python -m src.main --site trance-music https://trance-music.com/track/67890
+  python -m src.main --site trance-video https://www.trance-video.com/product/detail/39661
+  python -m src.main --mode auto https://example.com/movie
   python -m src.main --config custom_config.json https://example.com/movie
         """
     )
     
     parser.add_argument(
         "url",
-        help="影片或音乐的URL地址"
+        help="视频或电影的URL地址"
     )
     
     parser.add_argument(
         "-s", "--site",
-        help="指定网站类型 (auto-detect if not specified)",
+        help="指定网站类型 (不指定则自动检测)",
         choices=["ck-download", "trance-video", "auto"],
         default="auto"
     )
@@ -49,7 +53,7 @@ def main():
     
     parser.add_argument(
         "-o", "--output",
-        help="输出文件名 (默认使用影片标题)"
+        help="输出文件名 (默认使用视频标题)"
     )
     
     parser.add_argument(
@@ -60,7 +64,7 @@ def main():
     
     parser.add_argument(
         "-m", "--mode",
-        help="运行模式",
+        help="运行模式 (auto:自动/manual:手动/interactive:交互)",
         choices=["auto", "manual", "interactive"],
         default="interactive"
     )
@@ -80,7 +84,7 @@ def main():
     parser.add_argument(
         "--version",
         action="version",
-        version="NFO Generator 1.0.0"
+        version="GV-NFO-Maker 1.0.0"
     )
     
     args = parser.parse_args()
@@ -89,21 +93,21 @@ def main():
     setup_logging(verbose=args.verbose)
     
     try:
-        # Initialize configuration manager
+        # 初始化配置管理器
         config_manager = ConfigManager(args.config)
         
-        # Create default config if requested
+        # 如果请求创建默认配置文件
         if args.create_config:
             config_manager.create_default_config_file()
             return 0
         
-        # Validate configuration
+        # 验证配置
         config_manager.validate_config()
         
-        # Create generator factory
+        # 创建生成器工厂
         factory = GeneratorFactory(config_manager)
         
-        # Get appropriate generator
+        # 获取合适的生成器
         if args.site == "auto":
             generator = factory.create_generator_from_url(args.url)
             if not generator:
@@ -113,7 +117,7 @@ def main():
         else:
             generator = factory.create_generator(args.site)
         
-        # Override settings based on arguments
+        # 根据参数覆盖设置
         if args.no_manual:
             generator.config["manual_input"] = False
             generator.run_mode = "auto"
@@ -122,12 +126,12 @@ def main():
             generator.run_mode = args.mode
             generator.config["run_mode"] = args.mode
         
-        # Generate NFO file
+        # 生成NFO文件
         print(f"🎬 使用 {generator.site_name} 生成器")
         nfo_file = generator.run(args.url)
         
         if nfo_file:
-            # Rename output file if specified
+            # 如果指定了输出文件名则重命名
             if args.output:
                 import os
                 if os.path.exists(nfo_file):
@@ -161,12 +165,12 @@ def main():
 
 
 def interactive_mode():
-    """Interactive mode for NFO generation."""
-    print("🎬 NFO Generator - 交互模式")
+    """交互模式 - 用于NFO文件生成的交互式界面。"""
+    print("🎬 GV-NFO-Maker - 交互模式")
     print("=" * 40)
     
     try:
-        # Initialize configuration
+        # 初始化配置
         config_manager = ConfigManager()
         factory = GeneratorFactory(config_manager)
         
@@ -254,8 +258,8 @@ def interactive_mode():
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
-        # No arguments, start interactive mode
+        # 无参数时启动交互模式
         interactive_mode()
     else:
-        # Command line mode
+        # 命令行模式
         sys.exit(main())
