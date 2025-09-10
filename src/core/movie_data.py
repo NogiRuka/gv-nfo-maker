@@ -55,6 +55,13 @@ class MovieData:
     top250: int = 0
     set_name: str = ""
     unique_ids: Dict[str, str] = field(default_factory=dict)
+    date_added: str = ""
+    series_name: str = ""
+    maker: str = ""
+    label: str = ""
+    artist: str = ""
+    album: str = ""
+    track_number: str = ""
     
     def __post_init__(self):
         """Post-initialization processing."""

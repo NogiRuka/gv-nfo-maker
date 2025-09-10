@@ -8,6 +8,7 @@ from xml.dom import minidom
 
 from .movie_data import MovieData, Actor, Rating
 from .exceptions import ScrapingError, ValidationError, NetworkError
+from .nfo_template import TemplateManager
 
 
 class BaseNfoGenerator(ABC):
@@ -30,6 +31,8 @@ class BaseNfoGenerator(ABC):
         self.movie_data = MovieData()
         self.timeout = self.config.get("timeout", 10)
         self.run_mode = self.config.get("run_mode", "interactive")
+        self.template_manager = TemplateManager()
+        self.nfo_template = self.config.get("nfo_template", "standard")
     
     @property
     @abstractmethod
@@ -197,7 +200,7 @@ class BaseNfoGenerator(ABC):
         return True
     
     def create_nfo_file(self, filename: Optional[str] = None) -> str:
-        """Create NFO file from movie data.
+        """Create NFO file from movie data using template system.
         
         Args:
             filename: Output filename, defaults to movie title
@@ -208,112 +211,21 @@ class BaseNfoGenerator(ABC):
         Raises:
             ValidationError: If movie data is invalid
         """
-        if not self.movie_data.validate():
-            raise ValidationError("Movie data validation failed")
+        # Get appropriate template
+        template = self.template_manager.get_template(self.nfo_template)
         
-        # Create XML structure
-        movie = ET.Element("movie")
-        
-        # Basic information
-        ET.SubElement(movie, "title").text = self.movie_data.title
-        ET.SubElement(movie, "originaltitle").text = self.movie_data.original_title
-        ET.SubElement(movie, "sorttitle").text = self.movie_data.sort_title
-        
-        # Ratings
-        if self.movie_data.ratings:
-            ratings = ET.SubElement(movie, "ratings")
-            for rating in self.movie_data.ratings:
-                rating_elem = ET.SubElement(
-                    ratings, "rating", 
-                    name=rating.name, 
-                    max=str(rating.max_rating),
-                    default=str(rating.is_default).lower()
-                )
-                ET.SubElement(rating_elem, "value").text = str(rating.value)
-                ET.SubElement(rating_elem, "votes").text = str(rating.votes)
-        else:
-            # Default rating
-            ratings = ET.SubElement(movie, "ratings")
-            rating = ET.SubElement(
-                ratings, "rating", name="default", max="10", default="true"
-            )
-            ET.SubElement(rating, "value").text = "7.5"
-            ET.SubElement(rating, "votes").text = "1000"
-        
-        ET.SubElement(movie, "userrating").text = str(self.movie_data.user_rating)
-        ET.SubElement(movie, "top250").text = str(self.movie_data.top250)
-        ET.SubElement(movie, "year").text = self.movie_data.year
-        ET.SubElement(movie, "plot").text = self.movie_data.plot
-        ET.SubElement(movie, "outline").text = self.movie_data.outline
-        ET.SubElement(movie, "tagline").text = self.movie_data.tagline
-        ET.SubElement(movie, "runtime").text = self.movie_data.runtime
-        
-        # Images
-        if self.movie_data.thumb:
-            ET.SubElement(movie, "thumb", aspect="poster").text = self.movie_data.thumb
-        
-        if self.movie_data.fanart:
-            fanart = ET.SubElement(movie, "fanart")
-            ET.SubElement(fanart, "thumb").text = self.movie_data.fanart
-        
-        # Certification and dates
-        ET.SubElement(movie, "mpaa").text = self.movie_data.mpaa
-        ET.SubElement(movie, "premiered").text = self.movie_data.premiered
-        ET.SubElement(movie, "releasedate").text = self.movie_data.release_date
-        ET.SubElement(movie, "certification").text = self.movie_data.certification
-        
-        # IDs
-        if self.movie_data.product_id:
-            ET.SubElement(movie, "id").text = f"{self.site_name.lower()}-{self.movie_data.product_id}"
-        
-        for id_type, id_value in self.movie_data.unique_ids.items():
-            is_default = id_type == self.site_name.lower()
-            ET.SubElement(
-                movie, "uniqueid", 
-                type=id_type, 
-                default=str(is_default).lower()
-            ).text = id_value
-        
-        # Genres and tags
-        for genre in self.movie_data.genres:
-            ET.SubElement(movie, "genre").text = genre
-        
-        for tag in self.movie_data.tags:
-            ET.SubElement(movie, "tag").text = tag
-        
-        # Studio and trailer
-        ET.SubElement(movie, "studio").text = self.movie_data.studio
-        ET.SubElement(movie, "trailer").text = self.movie_data.trailer
-        
-        # Actors
-        for actor in self.movie_data.actors:
-            actor_elem = ET.SubElement(movie, "actor")
-            ET.SubElement(actor_elem, "name").text = actor.name
-            ET.SubElement(actor_elem, "role").text = actor.role
-            ET.SubElement(actor_elem, "order").text = str(actor.order)
-            ET.SubElement(actor_elem, "thumb").text = actor.thumb
-        
-        # Director and credits
-        ET.SubElement(movie, "director").text = self.movie_data.director
-        ET.SubElement(movie, "credits").text = self.movie_data.credits
-        
-        # Set and country
-        ET.SubElement(movie, "set").text = self.movie_data.set_name
-        ET.SubElement(movie, "country").text = self.movie_data.country
-        
-        # Generate pretty XML
-        rough_string = ET.tostring(movie, "utf-8")
-        reparsed = minidom.parseString(rough_string)
-        pretty_xml = reparsed.toprettyxml(indent="  ", encoding="utf-8")
+        # Generate XML content using template
+        xml_content = template.create_nfo_xml(self.movie_data, self.site_name)
         
         # Save to file
         if not filename:
             filename = f"{self.movie_data.title}.nfo"
         
         with open(filename, "wb") as f:
-            f.write(pretty_xml)
+            f.write(xml_content)
         
         print(f"\n✅ NFO文件已生成: {filename}")
+        print(f"📋 使用模板: {self.nfo_template}")
         return filename
     
     def run(self, url: str) -> Optional[str]:
@@ -399,3 +311,12 @@ class BaseNfoGenerator(ABC):
                 return False
             else:
                 print("请输入 y(是)/n(否)/auto(自动)")
+    
+    def get_template_for_site(self) -> str:
+        """Get appropriate template for the site.
+        
+        Returns:
+            Template name
+        """
+        # Override in subclasses to return appropriate template
+        return "standard"

@@ -9,6 +9,8 @@
 - **智能识别**: 自动识别URL对应的网站类型
 - **配置管理**: 灵活的配置系统，支持自定义设置
 - **多种运行模式**: 支持自动、手动、交互三种运行模式
+- **标准化NFO模板**: 基于Kodi/Plex标准的NFO格式模板系统
+- **多模板支持**: 支持标准、成人、音乐等不同类型的NFO模板
 - **交互式界面**: 支持命令行和交互式两种使用模式
 - **数据验证**: 完整的数据验证和错误处理机制
 - **日志记录**: 详细的日志记录功能
@@ -139,6 +141,52 @@ python -m src.main --mode interactive https://example.com/movie
 python -m src.main https://example.com/movie
 ```
 
+## 📋 NFO模板系统
+
+NFO Generator 采用标准化的模板系统，确保生成的NFO文件符合Kodi/Plex等媒体中心的格式要求。
+
+### 🎯 支持的模板类型
+
+#### 1. 标准模板 (standard)
+- **适用**: 普通电影、电视剧
+- **特点**: 符合Kodi/Plex标准格式
+- **字段**: 包含所有标准NFO字段
+
+#### 2. 成人模板 (adult)
+- **适用**: 成人内容
+- **特点**: 包含成人内容特有字段
+- **额外字段**: series(系列)、maker(制作商)、label(厂牌)
+- **默认评级**: XXX/R18+
+
+#### 3. 音乐模板 (music)
+- **适用**: 音乐视频、演唱会
+- **特点**: 适配音乐内容的字段
+- **额外字段**: artist(艺人)、album(专辑)、track(曲目)
+- **默认评级**: G级
+
+### 📄 NFO格式示例
+
+项目包含标准格式的示例文件：
+- `examples/sample_standard.nfo` - 标准电影NFO格式
+- `examples/sample_adult.nfo` - 成人内容NFO格式
+
+### ⚙️ 模板配置
+
+可以在配置文件中为不同网站指定默认模板：
+
+```json
+{
+  "sites": {
+    "ck-download": {
+      "nfo_template": "standard"
+    },
+    "trance-video": {
+      "nfo_template": "adult"
+    }
+  }
+}
+```
+
 ## 🔧 配置
 
 ### 配置文件格式
@@ -178,6 +226,7 @@ python -m src.main https://example.com/movie
 - `timeout`: 请求超时时间（秒）
 - `retry_attempts`: 重试次数
 - `run_mode`: 运行模式 (auto/manual/interactive)
+- `nfo_template`: NFO模板类型 (standard/adult/music)
 - `manual_input`: 是否启用手动输入修正
 - `auto_correction`: 是否启用自动修正
 

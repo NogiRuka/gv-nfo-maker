@@ -3,11 +3,16 @@
 from .base_generator import BaseNfoGenerator
 from .movie_data import MovieData
 from .exceptions import NFOGeneratorError, ScrapingError, ValidationError
+from .nfo_template import NFOTemplate, AdultNFOTemplate, MusicNFOTemplate, TemplateManager
 
 __all__ = [
     'BaseNfoGenerator',
     'MovieData',
     'NFOGeneratorError',
     'ScrapingError',
-    'ValidationError'
+    'ValidationError',
+    'NFOTemplate',
+    'AdultNFOTemplate',
+    'MusicNFOTemplate',
+    'TemplateManager'
 ]

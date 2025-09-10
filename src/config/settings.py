@@ -21,6 +21,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "auto_correction": True,
     "manual_input": True,
     "run_mode": "interactive",  # interactive, auto, manual
+    "nfo_template": "standard",  # standard, adult, music
     "backup_files": True,
     "log_level": "INFO",
     "log_file": "nfo_generator.log"
@@ -45,7 +46,8 @@ SITE_CONFIGS: Dict[str, Dict[str, Any]] = {
         },
         "default_studio": "CK-Download",
         "default_tags": ["ck-download", "国产"],
-        "default_genres": ["剧情", "爱情"]
+        "default_genres": ["剧情", "爱情"],
+        "nfo_template": "standard"
     },
     "trance-video": {
         "name": "Trance-Video",
@@ -72,7 +74,8 @@ SITE_CONFIGS: Dict[str, Dict[str, Any]] = {
         "default_mpaa": "XXX",
         "default_certification": "R18+",
         "default_country": "日本",
-        "default_runtime": "30"
+        "default_runtime": "30",
+        "nfo_template": "adult"
     }
 }
 

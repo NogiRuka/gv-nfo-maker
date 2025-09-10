@@ -75,20 +75,23 @@ class TranceMusicNfoGenerator(BaseNfoGenerator):
             
             # Initialize movie data
             self.movie_data = MovieData(
-                title=title,
-                original_title=title,
-                product_id=self.extract_product_id(url) or "unknown",
-                year=self._extract_year(soup),
-                plot=self._extract_description(soup),
-                outline=self._extract_release_date(soup),
-                genres=self._extract_genres(soup),
-                runtime=self._extract_duration(soup),
-                director=self._extract_maker(soup),
-                studio=self._extract_label(soup) or self.site_name,
-                premiered=self._extract_release_date(soup),
-                thumb=self._extract_artwork(soup),
-                fanart=self._extract_background(soup)
-            )
+            title=title,
+            original_title=title,
+            product_id=self.extract_product_id(url) or "unknown",
+            year=self._extract_year(soup),
+            plot=self._extract_description(soup),
+            outline=self._extract_release_date(soup),
+            genres=self._extract_genres(soup),
+            runtime=self._extract_duration(soup),
+            director=self._extract_maker(soup),
+            studio=self._extract_label(soup) or self.site_name,
+            premiered=self._extract_release_date(soup),
+            thumb=self._extract_artwork(soup),
+            fanart=self._extract_background(soup),
+            maker=self._extract_maker(soup),
+            label=self._extract_label(soup) or self.site_name,
+            series_name=self._extract_series(soup)
+        )
             
             # Add performers as actors
             performers = self._extract_performers(soup)
@@ -114,9 +117,12 @@ class TranceMusicNfoGenerator(BaseNfoGenerator):
             self.movie_data.add_rating(7.5, 100, "default", 10.0, True)
             
             # Set video-specific properties
-            self.movie_data.mpaa = "XXX"
-            self.movie_data.certification = "R18+"
-            self.movie_data.country = "日本"
+        self.movie_data.mpaa = "XXX"
+        self.movie_data.certification = "R18+"
+        self.movie_data.country = "日本"
+        
+        # Use adult template for this site
+        self.nfo_template = "adult"
             
             print("✅ 视频信息获取完成")
             return True
@@ -367,5 +373,25 @@ class TranceMusicNfoGenerator(BaseNfoGenerator):
     
     def _extract_background(self, soup: BeautifulSoup) -> str:
         """Extract background image from soup."""
-        # For music, background is often the same as artwork
+        # For videos, background is often the same as artwork
         return self._extract_artwork(soup)
+    
+    def _extract_series(self, soup: BeautifulSoup) -> str:
+        """Extract series name from soup."""
+        series_selectors = [
+            ".series",
+            ".collection",
+            "[class*='series']",
+            "[class*='collection']"
+        ]
+        
+        for selector in series_selectors:
+            series_elem = soup.select_one(selector)
+            if series_elem:
+                return series_elem.get_text().strip()
+        
+        return ""
+    
+    def get_template_for_site(self) -> str:
+        """Get appropriate template for trance video site."""
+        return "adult"
