@@ -52,7 +52,10 @@ class NFOTemplate:
         
         # 元数据字段
         'lockdata': 'lock_data',            # 锁定数据 - 固定为false
-        'lockedfields': 'locked_fields'     # 锁定字段 - 固定值
+        'lockedfields': 'locked_fields',    # 锁定字段 - 固定值
+        
+        # 注意：poster字段存在于MovieData中但不在NFO中生成
+        # 'poster': 'poster'                # 封面图片URL - 仅用于生成封面，不输出到NFO
     }
     
     # 必填字段验证

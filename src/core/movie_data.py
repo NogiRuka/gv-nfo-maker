@@ -70,6 +70,7 @@ class MovieData:
     tvdb_id: str = ""
     lock_data: bool = False
     locked_fields: str = ""
+    poster: str = ""                # 封面图片URL - 仅用于生成封面，不在NFO中输出
     
     def __post_init__(self):
         """Post-initialization processing."""
