@@ -25,10 +25,12 @@ def main():
 支持的网站:
   - CK-Download: ck-download.com (标准电影内容)
   - Trance-Video: trance-video.com (成人视频内容)
+  - Gay-Torrents: gay-torrents.net (Gay成人内容)
 
 使用示例:
   python -m src.main https://ck-download.com/product/detail/12345
   python -m src.main --site trance-video https://www.trance-video.com/product/detail/39661
+  python -m src.main --site gay-torrents https://www.gay-torrents.net/torrentdetails.php?torrentid=xxxxx
   python -m src.main --mode auto https://example.com/movie
   python -m src.main --config custom_config.json https://example.com/movie
         """
@@ -42,7 +44,7 @@ def main():
     parser.add_argument(
         "-s", "--site",
         help="指定网站类型 (不指定则自动检测)",
-        choices=["ck-download", "trance-video", "auto"],
+        choices=["ck-download", "trance-video", "gay-torrents", "auto"],
         default="auto"
     )
     
@@ -113,7 +115,7 @@ def main():
             generator = factory.create_generator_from_url(args.url)
             if not generator:
                 print("❌ 无法识别URL对应的网站，请使用 --site 参数指定")
-                print("支持的网站: ck-download, trance-video")
+                print("支持的网站: ck-download, trance-video, gay-torrents")
                 return 1
         else:
             generator = factory.create_generator(args.site)

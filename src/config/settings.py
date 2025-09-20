@@ -76,6 +76,33 @@ SITE_CONFIGS: Dict[str, Dict[str, Any]] = {
         "default_country": "日本",
         "default_runtime": "30",
         "nfo_template": "adult"
+    },
+    "gay-torrents": {
+        "name": "Gay-Torrents",
+        "domain": "gay-torrents.net",
+        "base_url": "https://www.gay-torrents.net",
+        "selectors": {
+            "title": ["h1", ".torrent-title", "title", ".main-title"],
+            "description": [".description", ".plot", ".summary", ".torrent-description"],
+            "genre": [".category", ".genre", ".tag", "[class*='category']"],
+            "date": [".release-date", ".date", ".published", "time"],
+            "duration": [".duration", ".runtime", ".time"],
+            "poster": ["img.poster", ".torrent-image img", ".preview img", "img[src*='preview']", "img[src*='thumb']"]
+        },
+        "patterns": {
+            "torrent_id": r"torrentid=([a-f0-9]+)",
+            "date": [r"(\d{4})-(\d{2})-(\d{2})", r"(\d{2})/(\d{2})/(\d{4})", r"(\d{2}-\d{2}-\d{4})"],
+            "duration": [r"(\d+)\s*分钟", r"(\d+)\s*min", r"(\d+):(\d+)", r"Duration:\s*(\d+)"]
+        },
+        "default_studio": "Gay-Torrents",
+        "default_tags": ["gay-torrents", "gay", "adult"],
+        "default_genres": ["Adult", "Gay"],
+        "default_mpaa": "XXX",
+        "default_certification": "R18+",
+        "default_country": "美国",
+        "default_runtime": "120",
+        "nfo_template": "adult",
+        "requires_login": True
     }
 }
 

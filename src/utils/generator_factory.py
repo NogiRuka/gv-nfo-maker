@@ -8,6 +8,7 @@ from ..core.exceptions import ConfigurationError
 from ..config.config_manager import ConfigManager
 from ..generators.ck_download_generator import CkDownloadNfoGenerator
 from ..generators.trance_generator import TranceMusicNfoGenerator
+from ..generators.gay_torrents_generator import GayTorrentsNfoGenerator
 
 
 class GeneratorFactory:
@@ -22,7 +23,8 @@ class GeneratorFactory:
         self.config_manager = config_manager
         self._generators: Dict[str, Type[BaseNfoGenerator]] = {
             "ck-download": CkDownloadNfoGenerator,
-            "trance-video": TranceMusicNfoGenerator
+            "trance-video": TranceMusicNfoGenerator,
+            "gay-torrents": GayTorrentsNfoGenerator
         }
     
     def register_generator(self, site: str, generator_class: Type[BaseNfoGenerator]) -> None:
@@ -90,7 +92,8 @@ class GeneratorFactory:
         # Fallback: try to match by domain keywords
         domain_mappings = {
             "ck-download": ["ck-download", "ckdownload"],
-            "trance-video": ["trance-video", "trance", "video"]
+            "trance-video": ["trance-video", "trance", "video"],
+            "gay-torrents": ["gay-torrents", "gay", "torrents"]
         }
         
         for site, keywords in domain_mappings.items():
